@@ -1,0 +1,127 @@
+﻿<UserControl x:Class="ArchivesCar.View.SetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ArchivesCar.View"
+             mc:Ignorable="d">
+    <Viewbox Stretch="Fill">
+        <Grid Width="1280" Height="1024">
+            <Grid.Background>
+                <ImageBrush ImageSource="../image/set.jpg" />
+            </Grid.Background>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.14*" />
+                <RowDefinition Height="0.9*" />
+            </Grid.RowDefinitions>
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" >
+                <Button Style="{StaticResource EmptyButtonStyle}" HorizontalAlignment="Left" Width="45" Height="45" Margin="50,0,0,0" Command="{Binding BackCommond}">
+                    <Button.Content>
+                        <Image Source="../image/back.png" />
+                    </Button.Content>
+                </Button>
+                <Button Style="{StaticResource EmptyButtonStyle}" HorizontalAlignment="Center" Margin="-50,0,0,0" Command="{Binding BackCommond}">
+                    <Button.Content>
+                        <Image Source="../image/back1.png" Height="25" />
+                    </Button.Content>
+                </Button>
+                <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding BackCommond}">
+                    <Button.Content>
+                        <Label Content="返回" FontSize="30" VerticalContentAlignment="Center" Foreground="White"/>
+                    </Button.Content>
+                </Button>
+            </WrapPanel>
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="1.2*" />
+                    <RowDefinition Height="1.2*" />
+                    <RowDefinition Height="1.4*" />
+                    <RowDefinition Height="1.2*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Width="800">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="0.8*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="灯光亮度" FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <Slider Grid.Column="2" Width="600" IsSnapToTickEnabled="True" Maximum="255" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                </Grid>
+                <Grid Width="800" Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="0.8*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="服务器IP" FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <Border Grid.Column="2" Height="60">
+                        <Border.Background>
+                            <ImageBrush ImageSource="../image/输入框.png"/>
+                        </Border.Background>
+                        <TextBox HorizontalContentAlignment="Center" BorderThickness="0" Foreground="Gray" FontSize="35" VerticalAlignment="Center" Background="{x:Null}" Text="{Binding ServerIP}" VerticalContentAlignment="Center" Padding="10,8,5,10">
+
+                        </TextBox>
+                    </Border>
+                </Grid>
+                <Grid Width="800" Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="0.8*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="端   口" FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <Border Grid.Column="2" Height="60">
+                        <Border.Background>
+                            <ImageBrush ImageSource="../image/输入框.png"/>
+                        </Border.Background>
+                        <TextBox BorderThickness="0" HorizontalContentAlignment="Center" Foreground="Gray" FontSize="35" VerticalAlignment="Center" Background="{x:Null}" Text="{Binding ServerPort}" VerticalContentAlignment="Center" Padding="10,8,5,10">
+
+                        </TextBox>
+                    </Border>
+                    <Label Height="50" VerticalAlignment="Bottom" FontSize="30" Content="{Binding Error}" Foreground="Red" Grid.Column="2" VerticalContentAlignment="Bottom" HorizontalContentAlignment="Left" Padding="30,0,0,0"/>
+
+                </Grid>
+               <Grid Width="800" Grid.Row="3">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="0.4*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="0.8*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="库房名称" FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <ComboBox HorizontalContentAlignment="Center" FontSize="35" VerticalContentAlignment="Center" Grid.Column="2" Height="60" BorderThickness="0" SelectedValuePath="Id" DisplayMemberPath="Name"  ItemsSource="{Binding List}" SelectedItem="{Binding SelectRoom,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                    <WrapPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" VerticalAlignment="Center" Content="当前库房名:"/>
+                        <Label FontSize="35" Foreground="#1fbdfb" VerticalContentAlignment="Center" VerticalAlignment="Center" Content="{Binding selectName}" />
+                    </WrapPanel>
+                </Grid>
+                <Grid Width="800" Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="0.8*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="2" Background="#1fbdfb" CornerRadius="30" HorizontalAlignment="Left" VerticalAlignment="Center" Width="175" Height="52" Grid.ColumnSpan="2" Margin="0,50">
+                        <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding OkCommond}">
+                            <Button.Content>
+                                <Label Content="确认" Foreground="White" FontSize="30"  VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                            </Button.Content>
+                        </Button>
+                    </Border>
+                    <Border Grid.Column="3" BorderBrush="#1fbdfb" CornerRadius="30" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Center" Width="175" Height="52" Margin="0,50">
+                        <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding BackCommond}">
+                            <Button.Content>
+                                <Label Content="取消" Foreground="#1fbdfb" FontSize="30"  VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                            </Button.Content>
+                        </Button>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Viewbox>
+</UserControl>
