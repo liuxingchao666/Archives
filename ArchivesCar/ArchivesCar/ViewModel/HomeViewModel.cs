@@ -101,10 +101,15 @@ namespace ArchivesCar.ViewModel
             {
                 return inventoryCommond ?? (inventoryCommond = new DelegateCommand(() =>
                 {
-                    result = false;
-                    inventoryControl inventoryControl = new inventoryControl(window);
-                    window.grid.Children.Clear();
-                    window.grid.Children.Add(inventoryControl);
+
+                   
+                    if (GetConn())
+                    {
+                        result = false;
+                        inventoryControl inventoryControl = new inventoryControl(window);
+                        window.grid.Children.Clear();
+                        window.grid.Children.Add(inventoryControl);
+                    }
                 }));
             }
         }
@@ -118,10 +123,14 @@ namespace ArchivesCar.ViewModel
             {
                 return queryCommond ?? (queryCommond = new DelegateCommand(() =>
                 {
-                    result = false;
-                    QueryControl queryControl = new QueryControl(window);
-                    window.grid.Children.Clear();
-                    window.grid.Children.Add(queryControl);
+                 
+                    if (GetConn())
+                    {
+                        result = false;
+                        QueryControl queryControl = new QueryControl(window);
+                        window.grid.Children.Clear();
+                        window.grid.Children.Add(queryControl);
+                    }
                 }));
             }
         }
@@ -135,10 +144,14 @@ namespace ArchivesCar.ViewModel
             {
                 return bindCommond ?? (bindCommond = new DelegateCommand(() =>
                 {
-                    result = false;
-                    BindControl control = new BindControl(window);
-                    window.grid.Children.Clear();
-                    window.grid.Children.Add(control);
+                   
+                    if (GetConn())
+                    {
+                        result = false;
+                        BindControl control = new BindControl(window);
+                        window.grid.Children.Clear();
+                        window.grid.Children.Add(control);
+                    }
                 }));
             }
         }
@@ -152,10 +165,14 @@ namespace ArchivesCar.ViewModel
             {
                 return upperShelfCommond ?? (upperShelfCommond = new DelegateCommand(() =>
                 {
-                    result = false;
-                    UpperShelfControl control = new UpperShelfControl(window);
-                    window.grid.Children.Clear();
-                    window.grid.Children.Add(control);
+                   
+                    if (GetConn())
+                    {
+                        result = false;
+                        UpperShelfControl control = new UpperShelfControl(window);
+                        window.grid.Children.Clear();
+                        window.grid.Children.Add(control);
+                    }
                 }));
             }
         }
@@ -370,6 +387,30 @@ namespace ArchivesCar.ViewModel
                 }
             }
             return "未安装MySql服务器,不支持离线模式";
+        }
+        public bool isCom = true;
+        public bool  GetConn()
+        {
+            if (PublicData.ServerConfig.connState)
+            {
+                PublicData.ServerConfig.wirelessRfid.conset();
+                return true;
+            }
+            else
+            {
+                SetError("无线设备未连接,正在尝试连接....");
+                Task.Run(() => {
+                    if (PublicData.ServerConfig.wirelessRfid.conn())
+                    {
+                        SetError("无线设备连接成功，请重新点击");
+                    }
+                    else
+                    {
+                        SetError("尝试连接无线设备失败");
+                    }
+                });
+                return false;
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d" Loaded="UserControl_Loaded">
+             mc:Ignorable="d">
     <Viewbox Stretch="Fill">
         <Grid Width="1280" Height="1024">
             <Grid.Background>
@@ -51,7 +51,7 @@
                                 <ColumnDefinition Width="0.8*" />
                             </Grid.ColumnDefinitions>
                             <Image Source="../image/LoginImage/用户.png" Width="50" />
-                            <TextBox Grid.Column="1" HorizontalContentAlignment="Center" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="PassWord_PreviewTextInput" Foreground="#48BAFE" BorderThickness="0" Text="{Binding Account}" VerticalContentAlignment="Center" FontSize="30"/>
+                            <TextBox Grid.Column="1" HorizontalContentAlignment="Center" InputMethod.IsInputMethodEnabled="False" Foreground="#48BAFE" BorderThickness="0" Text="{Binding Account}" VerticalContentAlignment="Center" FontSize="30"/>
                         </Grid>
                     </Border>
                     <Border Grid.Row="2" BorderThickness="0,0,0,2"  Height="80" Width="480" BorderBrush="#DBDBDB" >
@@ -61,7 +61,7 @@
                                 <ColumnDefinition Width="0.8*" />
                             </Grid.ColumnDefinitions>
                             <Image Source="../image/LoginImage/密码.png" Width="50" />
-                            <PasswordBox Grid.Column="1" HorizontalContentAlignment="Center" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="PassWord_PreviewTextInput" Foreground="#48BAFE" BorderThickness="0" Name="passWord" PasswordChar="*" VerticalContentAlignment="Center" FontSize="30"/>
+                            <PasswordBox Grid.Column="1" HorizontalContentAlignment="Center" InputMethod.IsInputMethodEnabled="False"  Foreground="#48BAFE" BorderThickness="0" Name="passWord" PasswordChar="*" VerticalContentAlignment="Center" FontSize="30"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -81,6 +81,7 @@
                         </Button.Content>
                     </Button>
                 </Border>
+                <!--<Button Width="100" Click="Button_Click_2"></Button>-->
             </Grid>
             <Label Content="{Binding Error}" Height="60" Grid.Row="4" VerticalAlignment="Bottom" Foreground="Red" HorizontalContentAlignment="Center" FontSize="30"/>
         </Grid>

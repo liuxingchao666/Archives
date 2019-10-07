@@ -9,6 +9,32 @@ namespace ArchivesCar.Model
 {
     public class PositionInfo
     {
+        public PositionInfo(string USER)
+        {
+            if (USER.Substring(0, 8) == "AA0CFFA5")
+            {
+                fkStoreId = ConfigurationManager.AppSettings["StoreId"];
+                fkStoreName = ConfigurationManager.AppSettings["StoreName"];
+                fkRegionNum = USER.Substring(8, 4).TrimStart('0');
+                colNum = USER.Substring(12, 4).TrimStart('0');
+                divNum = USER.Substring(16, 4).TrimStart('0');
+                laysNum = USER.Substring(20, 4).TrimStart('0');
+                if (USER.Substring(24, 4) == "0000") { direction = "左"; }
+                else { direction = "右"; }
+                position = fkRegionNum.TrimStart('0') + "区" + colNum.TrimStart('0') + "列" + divNum.TrimStart('0') + "节" + laysNum.TrimStart('0') + "层" + direction.TrimStart('0') + "侧";
+                positionOffLine = fkStoreName + fkRegionNum.TrimStart('0') + "区" + colNum.TrimStart('0') + "列" + divNum.TrimStart('0') + "节" + laysNum.TrimStart('0') + "层" + direction.TrimStart('0') + "方";
+            }
+            else
+            {
+                fkRegionId = "0";
+                fkRegionNum = "0";
+                colNum = "0";
+                divNum = "0";
+                laysNum = "0";
+                direction = "左";
+            }
+
+        }
         /// <summary>
         /// 库房id
         /// </summary>

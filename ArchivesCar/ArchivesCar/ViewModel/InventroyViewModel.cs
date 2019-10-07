@@ -1,5 +1,6 @@
 ﻿using ArchivesCar.DAL;
 using ArchivesCar.Model;
+using ArchivesCar.PublicData;
 using ArchivesCar.View;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
@@ -28,23 +29,24 @@ namespace ArchivesCar.ViewModel
                 {
                     lock (PublicData.ServerConfig.UserList)
                     {
+                        //判断user是重复扫描
                         if (PublicData.ServerConfig.UserList.Count > 0)
                         {
                             string uid = PublicData.ServerConfig.UserList.Dequeue();
-                            EPC ="当前层架标签位置:"+ GetPosition(uid);
-                            GetDataByEPCDAL getDataByEPC = new GetDataByEPCDAL();
-                            object errorMsg = null;
-                            if (getDataByEPC.GetDataByEPC(ref errorMsg))
+                            if (!PublicData.ServerConfig.userNow.Equals(uid))
                             {
-                                ReturnInfo info = errorMsg as ReturnInfo;
-                                if (info.TrueOrFalse)
-                                {
-                                    List<InventoryInfo> infos = info.Result as List<InventoryInfo>;
-                                    List = infos;
-                                    ///刷新回显
-                                    
-                                }
+                                PublicData.ServerConfig.userNow = uid;
+                                EPC = "当前层架标签位置:" + GetPosition(uid);
                             }
+                        }
+                        //当前user信息集
+                        if (!string.IsNullOrEmpty(PublicData.ServerConfig.userNow))
+                        {
+                            //positionInfos赋值
+                            PositionInfo info = new PositionInfo(PublicData.ServerConfig.userNow);
+                            GetDataByEPCDAL getData = new GetDataByEPCDAL();
+                            object errorMsg = info;
+                            if (getData.GetDataByEPC(ref errorMsg)) { }
                         }
                     }
                     Thread.Sleep(300);
@@ -56,6 +58,7 @@ namespace ArchivesCar.ViewModel
             thread.Start();
             PIC = "../image/停止.png";
         }
+        List<PositionInfo> positionInfos = new List<PositionInfo>();
         bool result = true;
         Thread thread;
         MainWindow mainWindow;
@@ -69,6 +72,8 @@ namespace ArchivesCar.ViewModel
             {
                 return backCommond ?? (backCommond = new DelegateCommand(() =>
                 {
+                    if(PublicData.ServerConfig.connState)
+                        PublicData.ServerConfig.wirelessRfid.stop();
                     result = false;
                     HomeControl homeControl = new HomeControl(mainWindow);
                     mainWindow.grid.Children.Clear();
@@ -141,10 +146,18 @@ namespace ArchivesCar.ViewModel
             {
                 return changeCommond ?? (changeCommond = new DelegateCommand(() =>
                 {
-                    if (PIC.Contains("扫描"))
+                    if (!PublicData.ServerConfig.connState)
                         PIC = "../image/停止.png";
+                    else if (PIC.Contains("扫描"))
+                    {
+                        PIC = "../image/停止.png";
+                        PublicData.ServerConfig.wirelessRfid.stop();
+                    }
                     else
+                    {
                         PIC = "../image/扫描.png";
+                        PublicData.ServerConfig.wirelessRfid.conset();
+                    }
                 }));
             }
         }

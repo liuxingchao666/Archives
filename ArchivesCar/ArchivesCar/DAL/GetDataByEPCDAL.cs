@@ -1,5 +1,6 @@
 ﻿using ArchivesCar.BLL;
 using ArchivesCar.Model;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace ArchivesCar.DAL
             {
                 ReturnInfo returnInfo = new ReturnInfo() { TrueOrFalse=false};
                 string url = string.Format(@"http://{0}:{1}/storeroom/countingcar/arcOfLay", PublicData.ServerConfig.serverIP, PublicData.ServerConfig.serverPort);
-                Http http = new Http(url,errorMsg);
+                Http http = new Http(url, JsonConvert.SerializeObject(errorMsg));
                 var result = JToken.Parse(http.HttpPosts());
                 returnInfo.Result = result["msg"].ToString();
                 if (result["state"].ToString().ToLower().Equals("true"))

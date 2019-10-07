@@ -29,25 +29,10 @@ namespace ArchivesCar.View
             DataContext = null;
             DataContext = new LoginViewModel(mainWindow);
         }
-
-        private void PassWord_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            //Regex re = new Regex("[^0-9.-]+");
-            //e.Handled = re.IsMatch(e.Text);
-        }
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             System.Environment.Exit(0);
-        }
-
-        private void UserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            wirelessRfid wirelessRfid = new wirelessRfid();
-            if (wirelessRfid.conn())
-            {
-                int i = 0;
-            }
+          //  PublicData.ServerConfig.wirelessRfid.stop();
         }
     }
 }

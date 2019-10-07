@@ -1,4 +1,6 @@
 ﻿using ArchivesCar.Model;
+using ArchivesCar.PublicData;
+using ArchivesCar.View;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Threading;
 
 namespace ArchivesCar.BLL
 {
@@ -126,6 +129,8 @@ namespace ArchivesCar.BLL
         public static extern int ISO18000p6C_SetInvenMetaDataFlags(UIntPtr hIso18000p6CInvenParam, UInt32 flags);
         [DllImport("rfidlib_reader.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int RDR_GetLoadedReaderDriverOpt(UInt32 idx, string option, StringBuilder valueBuffer, ref UInt32 nSize);
+        [DllImport("rfidlib_reader.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern int RDR_SetCommuImmeTimeout(UIntPtr hr);
 
         [DllImport("rfidlib_aip_iso18000p6C.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int ISO18000p6C_ParseTagReport(UIntPtr hTagReport,
@@ -137,15 +142,26 @@ namespace ArchivesCar.BLL
                                           ref UInt32 tdLen /* IN:max size of the tagdata buffer ,OUT:bytes written into tagdata buffer */);
         [DllImport("rfidlib_reader.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int DNODE_Destroy(UIntPtr dn);
+        [DllImport("rfidlib_reader.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern int RDR_GetReaderInfor(UIntPtr hr,
+                                  Byte Type,
+                                  StringBuilder buffer,
+                                 ref UInt32 nSize);
+
     }
     public class wirelessRfid
     {
-        UIntPtr hreader = (UIntPtr)0x0000000000000000;
+        public wirelessRfid()
+        {
+            RfidBLL.RDR_LoadReaderDrivers(AppDomain.CurrentDomain.BaseDirectory + "/Drivers");
+        }
+        UIntPtr hreader = (UIntPtr)0x00;
         bool _shouldStop = false;
         byte onlyNewTag = 1;
         Thread thread;
         public bool conn()
         {
+            hreader = (UIntPtr)0x00;
             int iret;
             UIntPtr InvenParamSpecList = UIntPtr.Zero;
             InvenParamSpecList = RfidBLL.RDR_CreateInvenParamSpecList();
@@ -156,133 +172,69 @@ namespace ArchivesCar.BLL
 
             if (AIPIso18000p6c.ToUInt64() != 0)
             {
-                ArrayList readerDriverInfoList = new ArrayList();
-
-                RfidBLL.RDR_LoadReaderDrivers(AppDomain.CurrentDomain.BaseDirectory + "/Drivers");
-                /* enum and show loaded reader driver */
-                UInt32 nCount;
-                nCount = RfidBLL.RDR_GetLoadedReaderDriverCount();
-                uint i;
-                for (i = 0; i < nCount; i++)
-                {
-                    UInt32 nSize;
-                    CReaderDriverInf driver = new CReaderDriverInf();
-                    StringBuilder strCatalog = new StringBuilder();
-                    strCatalog.Append('\0', 64);
-
-                    nSize = (UInt32)strCatalog.Capacity;
-                    RfidBLL.RDR_GetLoadedReaderDriverOpt(i, "CATALOG", strCatalog, ref nSize);
-                    driver.m_catalog = strCatalog.ToString();
-                    if (driver.m_catalog == "Reader") // Only reader we need
-                    {
-                        StringBuilder strName = new StringBuilder();
-                        strName.Append('\0', 64);
-                        nSize = (UInt32)strName.Capacity;
-                        RfidBLL.RDR_GetLoadedReaderDriverOpt(i, "NAME", strName, ref nSize);
-                        driver.m_name = strName.ToString();
-
-                        StringBuilder strProductType = new StringBuilder();
-                        strProductType.Append('\0', 64);
-                        nSize = (UInt32)strProductType.Capacity;
-                        RfidBLL.RDR_GetLoadedReaderDriverOpt(i, "ID", strProductType, ref nSize);
-                        driver.m_productType = strProductType.ToString();
-
-                        StringBuilder strCommSupported = new StringBuilder();
-                        strCommSupported.Append('\0', 64);
-                        nSize = (UInt32)strCommSupported.Capacity;
-                        RfidBLL.RDR_GetLoadedReaderDriverOpt(i, "COMM_TYPE_SUPPORTED", strCommSupported, ref nSize);
-                        driver.m_commTypeSupported = (UInt32)int.Parse(strCommSupported.ToString());
-
-                        readerDriverInfoList.Add(driver);
-                    }
-                }
+                string connstr = "RDType=M60;CommType=COM;COMName=COM8;BaudRate=38400;Frame=8E1;BusAddr=255";
                 UInt32 nCOMCnt = RfidBLL.COMPort_Enum();
-                for (i = 0; i < nCOMCnt; i++)
+                for (uint i = 0; i < nCOMCnt; i++)
                 {
                     StringBuilder comName = new StringBuilder();
                     comName.Append('\0', 64);
                     RfidBLL.COMPort_GetEnumItem(i, comName, (UInt32)comName.Capacity);
-
+                    connstr = "RDType=M60;CommType=COM;COMName=" + comName + ";BaudRate=38400;Frame=8E1;BusAddr=255";
+                    int r = RfidBLL.RDR_Open(connstr, ref hreader);
+                    if (r == 0)
+                    {
+                        StringBuilder devInfor = new StringBuilder();
+                        devInfor.Append('\0', 128);
+                        UInt32 nSize;
+                        nSize = (UInt32)devInfor.Capacity;
+                        r = RfidBLL.RDR_GetReaderInfor(hreader, 0, devInfor, ref nSize);
+                        if (r == 0)
+                        {
+                            ServerConfig.connState = true;
+                            _shouldStop = false;
+                            return true;
+                        }
+                        return false;
+                    }
                 }
-                string connstr = "RDType=M60;CommType=COM;COMName=COM8;BaudRate=38400;Frame=8E1;BusAddr=255";
-                byte[] data = new byte[16];
-                int r = RfidBLL.RDR_Open(connstr, ref hreader);
-                if (r == 0)
-                {
-                    thread = new Thread(DoInventory);
-                    thread.Start();
-                }
-                return true;
+                return false;
             }
             return false;
         }
-
-        public delegate void delegate_tag_report_handle(UInt32 AIPType, UInt32 tagType, UInt32 antID, UInt32 metaFlags, Byte[] tagData, UInt32 datlen, String writeOper, String lockOper);
-        public void dele_tag_report_handler(UInt32 AIPType, UInt32 tagType, UInt32 antID, UInt32 metaFlags, Byte[] tagData, UInt32 datlen, String writeOper, String lockOper)
-        {
-            UInt16 epcBitsLen = 0;
-            int idx = 0;
-            List<Byte> epc;
-            List<Byte> readData;
-            int i;
-            String strAntId;
-            strAntId = antID.ToString();
-            epc = new List<byte>();
-            readData = new List<byte>();
-            if (metaFlags == 0) metaFlags |= 0x01;
-            if ((metaFlags & 0x01) > 0)
-            {
-                if (datlen < 2)
-                {
-                    return;
-                }
-                epcBitsLen = (UInt16)(tagData[idx] | (tagData[idx + 1] << 8));
-                idx += 2;
-                int epcBytes = ((epcBitsLen + 7) / 8);
-                if ((datlen - idx) < epcBytes)
-                {
-                    return;
-                }
-                for (i = 0; i < epcBytes; i++) epc.Add(tagData[idx + i]);
-                idx += epcBytes;
-            }
-            String EPC = BitConverter.ToString(epc.ToArray(), 0, epc.Count).Replace("-", string.Empty) + BitConverter.ToString(readData.ToArray(), 0, readData.Count).Replace("-", string.Empty);
-            if (EPC.Contains("E200680A8AA8"))
-                result = true;
-            else
-                result = false;
-
-        }
-        bool result = false;
-        uint p = 0x01;
+        bool result = true;//user epc 切换判断
+        uint p = 0x01;//切换码
+        public LoginControl control;
         public int tag_inventory(
                                 Byte AIType,
                                  Byte AntennaSelCount,
                                  Byte[] AntennaSel,
-                                delegate_tag_report_handle tagReportHandler,
                                  ref UInt32 nTagCount)
         {
 
             int iret;
             UIntPtr InvenParamSpecList = UIntPtr.Zero;
-            InvenParamSpecList =RfidBLL.RDR_CreateInvenParamSpecList();
+            InvenParamSpecList = RfidBLL.RDR_CreateInvenParamSpecList();
             if (InvenParamSpecList.ToUInt64() != 0)
             {
                 /* set timeout */
-                RfidBLL.RDR_SetInvenStopTrigger(InvenParamSpecList,3,100, 0);
+                RfidBLL.RDR_SetInvenStopTrigger(InvenParamSpecList, 3, 100, 0);
                 /* create ISO18000p6C air protocol inventory parameters */
-                UIntPtr AIPIso18000p6c =RfidBLL.ISO18000p6C_CreateInvenParam(InvenParamSpecList, 0, 0, 0, 0x00, 0xff);
+                UIntPtr AIPIso18000p6c = RfidBLL.ISO18000p6C_CreateInvenParam(InvenParamSpecList, 0, 0, 0, 0x00, 0xff);
                 if (AIPIso18000p6c.ToUInt64() != 0)
                 {
+                    if (result)
+                        p = 0x01;//epc
+                    else
+                        p = 0x03;//uid 0x02 tid
                     /* set inventory read parameter for TID */
                     RfidBLL.ISO18000p6C_SetInvenReadParam(AIPIso18000p6c, (Byte)p, 0, 0);
                     /*only TID return */
                     UInt32 metaFlags = 0x20;
-                    RfidBLL.ISO18000p6C_SetInvenMetaDataFlags(AIPIso18000p6c, 0x20);
+                    RfidBLL.ISO18000p6C_SetInvenMetaDataFlags(AIPIso18000p6c, metaFlags);
                 }
             }
             nTagCount = 0;
-            LABEL_TAG_INVENTORY:
+        LABEL_TAG_INVENTORY:
             iret = RfidBLL.RDR_TagInventory(hreader, AIType, AntennaSelCount, AntennaSel, InvenParamSpecList);
             if (iret == 0 || iret == -21)
             {
@@ -303,7 +255,36 @@ namespace ArchivesCar.BLL
                     if (iret == 0)
                     {
                         object[] pList = { aip_id, tag_id, ant_id, metaFlags, tagData, nSize, "", "" };
-                       // Invoke(tagReportHandler, pList);
+
+                        byte[] epc = new byte[12];
+                        Array.Copy(tagData, 4, epc, 0, 12);
+                        StringBuilder @string = new StringBuilder();
+                        foreach (var temp in epc)
+                        {
+                            @string.Append(temp.ToString("X2"));
+                        }
+                        if (!ServerConfig.EpcS.Contains(@string.ToString()))
+                            ServerConfig.EpcS.Add(@string.ToString());
+                        if (@string.ToString().Contains("E200680A8AA8"))//层架判断
+                            result = false;
+                        else
+                            result = true;
+                        ///user判断
+                        ServerConfig.EpcS.Add(@string.ToString());
+                        byte[] user = new byte[28];
+                        Array.Copy(tagData, 0, user, 0, 28);
+                        @string = new StringBuilder();
+                        foreach (var temp in user)
+                        {
+                            @string.Append(temp.ToString("X2"));
+                        }
+                        if (@string.ToString().Contains("AA0CFFA5"))
+                        {
+                            //可用user
+                            if (!ServerConfig.UserList.Contains(@string.ToString()))
+                                ServerConfig.UserList.Enqueue(@string.ToString());
+                            ServerConfig.EpcS.Remove(@string.ToString());
+                        }
                     }
 
 
@@ -322,21 +303,27 @@ namespace ArchivesCar.BLL
         }
         public void DoInventory()
         {
-            delegate_tag_report_handle cbTagReportHandle;
-
-            cbTagReportHandle = new delegate_tag_report_handle(dele_tag_report_handler);
-
             int iret;
-            Byte AIType =1;
+            Byte AIType = 1;
             if (onlyNewTag == 1)
             {
                 AIType = 2;  //only new tag inventory 
             }
             while (!_shouldStop)
             {
-               byte[] AntennaSel = new byte[16];
+                StringBuilder devInfor = new StringBuilder();
+                devInfor.Append('\0', 128);
+                UInt32 nSize;
+                nSize = (UInt32)devInfor.Capacity;
+                iret = RfidBLL.RDR_GetReaderInfor(hreader, 0, devInfor, ref nSize);
+                if (iret != 0)
+                {
+                    close();
+                    break;
+                }
+                byte[] AntennaSel = new byte[16];
                 UInt32 nTagCount = 0;
-                iret = tag_inventory(AIType, 0, AntennaSel, cbTagReportHandle, ref nTagCount);
+                iret = tag_inventory(AIType, 0, AntennaSel, ref nTagCount);
                 if (iret == 0)
                 {
                     // inventory ok
@@ -349,13 +336,41 @@ namespace ArchivesCar.BLL
                 AIType = 1;
                 if (onlyNewTag == 1)
                 {
-                    AIType = 2;  
+                    AIType = 2;
                 }
             }
-            object[] pFinishList = { };
-           // Invoke(new delegateInventoryFinishCallback(InventoryFinishCallback), pFinishList);
-          
+
             RfidBLL.RDR_ResetCommuImmeTimeout(hreader);
+        }
+        /// <summary>
+        /// 停止扫描
+        /// </summary>
+        public void stop()
+        {
+            _shouldStop = true;
+            thread.Abort();
+            thread = null;
+            RfidBLL.RDR_SetCommuImmeTimeout(hreader);
+        }
+        /// <summary>
+        /// 关闭通讯
+        /// </summary>
+        public void close()
+        {
+            int i = RfidBLL.RDR_Close(hreader);
+
+            RfidBLL.RDR_ResetCommuImmeTimeout(hreader);
+            ServerConfig.connState = false;
+            _shouldStop = true;
+        }
+        /// <summary>
+        /// 恢复扫描
+        /// </summary>
+        public void conset()
+        {
+            _shouldStop = false;
+            thread = new Thread(this.DoInventory);
+            thread.Start();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ArchivesCar.BLL;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -46,5 +47,17 @@ namespace ArchivesCar.PublicData
         /// 当前操作已处理的epc集合（用于去重）
         /// </summary>
         public static List<string> UEpcS = new List<string>();
+        /// <summary>
+        /// 设备连接状态
+        /// </summary>
+        public static bool connState = false;
+        /// <summary>
+        /// 当前使用的user
+        /// </summary>
+        public static string userNow;
+        /// <summary>
+        /// 连接类
+        /// </summary>
+        public static wirelessRfid wirelessRfid = new wirelessRfid();
     }
 }
