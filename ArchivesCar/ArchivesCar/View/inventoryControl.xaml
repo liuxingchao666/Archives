@@ -89,13 +89,13 @@
                             <Setter Property="FontSize" Value="28"/>
                             <Setter Property="HorizontalContentAlignment" Value="Right"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{ Binding Background}" Value="green">
+                                <DataTrigger Binding="{Binding Background}" Value="green">
                                     <Setter Property="Background" Value="#90EE90" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{ Binding Background}" Value="blue" >
+                                <DataTrigger Binding="{Binding Background}" Value="blue" >
                                     <Setter Property="Background" Value="#1AB9FB" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{ Binding Background}" Value="red">
+                                <DataTrigger Binding="{Binding Background}" Value="red">
                                     <Setter Property="Background" Value="#FF8275" />
                                 </DataTrigger>
                             </Style.Triggers>

@@ -299,7 +299,7 @@ namespace ArchivesCar.ViewModel
             Task.Run(() =>
             {
                 ChangeModel = data;
-                Thread.Sleep(3000);
+                Thread.Sleep(2000);
                 ChangeModel = "";
             });
         }
@@ -372,7 +372,7 @@ namespace ArchivesCar.ViewModel
         /// 获取MySql服务状态
         /// </summary>
         /// <returns></returns>
-        [STAThread]
+       // [STAThread]
         string GetServiceState()
         {
             var serviceControllers = ServiceController.GetServices();
@@ -393,7 +393,9 @@ namespace ArchivesCar.ViewModel
         {
             if (PublicData.ServerConfig.connState)
             {
+                Task.Run(() => { 
                 PublicData.ServerConfig.wirelessRfid.conset();
+                });
                 return true;
             }
             else

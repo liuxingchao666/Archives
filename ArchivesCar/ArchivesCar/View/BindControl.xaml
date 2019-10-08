@@ -7,6 +7,10 @@
              mc:Ignorable="d">
     <Viewbox Stretch="Fill">
         <Grid  Width="1920" Height="1024">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="119*"/>
+                <ColumnDefinition Width="201*"/>
+            </Grid.ColumnDefinitions>
             <Grid.Background>
                 <ImageBrush ImageSource="../image/set.jpg" />
             </Grid.Background>
@@ -14,7 +18,7 @@
                 <RowDefinition Height="0.14*" />
                 <RowDefinition Height="0.9*" />
             </Grid.RowDefinitions>
-            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,45">
                 <Button Style="{StaticResource EmptyButtonStyle}" HorizontalAlignment="Left" Width="45" Height="45" Margin="50,0,0,0" Command="{Binding BackCommond}">
                     <Button.Content>
                         <Image Source="../image/back.png" />
@@ -31,24 +35,24 @@
                     </Button.Content>
                 </Button>
             </WrapPanel>
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" >
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="463,42" >
                 <Border Background="White" CornerRadius="25" Width="844" Height="46">
                     <TextBox BorderThickness="0" Margin="25,0,60,0" Text="{Binding QueryText}" VerticalContentAlignment="Center" FontSize="21" Foreground="Gray"/>
                 </Border>
-                <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding QueryCommand}">
+                <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding QueryCommond}">
                     <Button.Content>
-                        <Image Source="../image/搜索.png" Height="42" Width="44" Margin="-80,0,0,0"/>
+                        <Image Source="../image/搜索.png" Height="40" Width="44" Margin="-80,0,0,0"/>
                     </Button.Content>
                 </Button>
                 <Border CornerRadius="25" Height="55" Background="White" Width="100" Margin="50,0,0,0">
                     <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding BindCommond}" CommandParameter="{Binding ElementName=grid}">
-                    <Button.Content>
+                        <Button.Content>
                             <Label Content="绑定" Foreground="#4FCEFE"  FontWeight="Bold" FontSize="26" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-                    </Button.Content>
-                </Button>
+                        </Button.Content>
+                    </Button>
                 </Border>
             </WrapPanel>
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="1" Grid.ColumnSpan="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60" />
                     <RowDefinition Height="*" />
@@ -56,12 +60,12 @@
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBox BorderThickness="1" Text="{Binding EPC}" IsReadOnly="True" BorderBrush="Gray" Width="844" Height="40" FontSize="21" VerticalContentAlignment="Center" Foreground="Gray">
                     </TextBox>
-                    <Border CornerRadius="25" Width="100" Margin="50,0,0,0" Background="#4FCEFE">
+                    <Border CornerRadius="25" Width="100" Margin="50,0,0,0" Background="#4FCEFE" Visibility="{Binding Rfidstate}">
                         <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding QueryRfid}">
-                        <Button.Content>
-                            <Label Content="读取RFID" Visibility="{Binding State}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" FontSize="18"/>
-                        </Button.Content>
-                    </Button>
+                            <Button.Content>
+                                <Label Content="读取RFID" Visibility="{Binding State}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" FontSize="18"/>
+                            </Button.Content>
+                        </Button>
                     </Border>
                 </WrapPanel>
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">

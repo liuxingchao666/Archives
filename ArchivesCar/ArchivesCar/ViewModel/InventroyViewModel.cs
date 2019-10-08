@@ -20,16 +20,31 @@ namespace ArchivesCar.ViewModel
 {
     public class InventroyViewModel : NotificationObject
     {
+        /// <summary>
+        /// 当前层架应有的数量epc
+        /// </summary>
+        List<InventoryInfo> positions;
+        /// <summary>
+        /// 当前界面已扫描到的epc
+        /// </summary>
+        List<string> UseList = new List<string>();
         public InventroyViewModel(MainWindow mainWindow)
         {
             this.mainWindow = mainWindow;
+            PublicData.ServerConfig.userNow = "";
             thread = new Thread(new ThreadStart(() =>
             {
                 while (result)
                 {
+                    if (!PublicData.ServerConfig.connState)
+                    {
+                        PublicData.ServerConfig.wirelessRfid.conn();
+                        PublicData.ServerConfig.wirelessRfid.conset();
+                    }
                     lock (PublicData.ServerConfig.UserList)
                     {
-                        //判断user是重复扫描
+
+                        //判断user是重复扫描  user替换刷新集合
                         if (PublicData.ServerConfig.UserList.Count > 0)
                         {
                             string uid = PublicData.ServerConfig.UserList.Dequeue();
@@ -37,16 +52,79 @@ namespace ArchivesCar.ViewModel
                             {
                                 PublicData.ServerConfig.userNow = uid;
                                 EPC = "当前层架标签位置:" + GetPosition(uid);
+                                PositionInfo info = new PositionInfo(PublicData.ServerConfig.userNow);
+
+                                GetDataByEPCDAL getData = new GetDataByEPCDAL();
+                                object errorMsg = info;
+                                if (getData.GetDataByEPC(ref errorMsg))
+                                {
+                                    ReturnInfo returnInfo = errorMsg as ReturnInfo;
+                                    if (returnInfo.TrueOrFalse)
+                                    {
+                                        positions = returnInfo.Result as List<InventoryInfo>;
+                                        UseList = new List<string>();
+                                        NumberTotal = "总数:"+positions.Count();
+                                        total= positions.Count();
+                                        empty = positions.Count();
+                                        wrang = 0;
+                                        shelves = 0;
+                                        cages = 0;
+                                        NumberEmpty = "空架:" + positions.Count();
+                                        NumberShelves = "在架:0 ";
+                                        NumberCages = "顺架:0 ";
+                                        NumberWrong = "错架:0 ";
+                                    }
+                                }
                             }
                         }
-                        //当前user信息集
+                    }
+                    lock (PublicData.ServerConfig.EpcList)
+                    {
                         if (!string.IsNullOrEmpty(PublicData.ServerConfig.userNow))
                         {
-                            //positionInfos赋值
-                            PositionInfo info = new PositionInfo(PublicData.ServerConfig.userNow);
-                            GetDataByEPCDAL getData = new GetDataByEPCDAL();
-                            object errorMsg = info;
-                            if (getData.GetDataByEPC(ref errorMsg)) { }
+                            Task.Run(() =>
+                            {
+                                GetSelArcByEpc getSelArcByEpc;
+                                while (PublicData.ServerConfig.EpcList.Count() > 0)
+                                {
+                                    getSelArcByEpc = new GetSelArcByEpc();
+                                    string epc = PublicData.ServerConfig.EpcList.Dequeue();
+                                    if (!UseList.Contains(epc))
+                                    {
+                                        object errorMsg = epc;
+                                        if (getSelArcByEpc.SelArcByEpc(ref errorMsg))
+                                        {
+                                            ReturnInfo returnInfo = errorMsg as ReturnInfo;
+                                            if (returnInfo.TrueOrFalse)
+                                            {
+                                                InventoryInfo InventoryInfo = returnInfo.Result as InventoryInfo;
+                                                UseList.Add(epc);
+                                                var temp = (from c in positions
+                                                            where c.fkFileId == InventoryInfo.fkFileId
+                                                            select c).SingleOrDefault();
+                                                if (temp== null || string.IsNullOrEmpty(temp.fkFileId))
+                                                {
+                                                    wrang++;
+                                                    NumberWrong = "错架:"+wrang;
+                                                    InventoryInfo.Background = "red";
+                                                }
+                                                if (temp != null && !string.IsNullOrEmpty(temp.fkFileId))
+                                                {
+                                                    cages++;
+                                                    NumberCages = "顺架:" + cages;
+                                                    shelves++;
+                                                    NumberShelves = "在架:" + shelves;
+                                                    empty--;
+                                                    NumberEmpty = "空架:" + empty;
+                                                    InventoryInfo.Background = "blue";
+                                                }
+                                                InventoryInfo.order = List.Count() + 1;
+                                                List.Add(InventoryInfo);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
                         }
                     }
                     Thread.Sleep(300);
@@ -56,23 +134,35 @@ namespace ArchivesCar.ViewModel
             }));
             thread.IsBackground = true;
             thread.Start();
-            PIC = "../image/停止.png";
+            if (!PublicData.ServerConfig.connState)
+            {
+                PIC = "../image/停止.png";
+            }
+            else
+            {
+                PIC = "../image/扫描.png";
+            }
         }
         List<PositionInfo> positionInfos = new List<PositionInfo>();
         bool result = true;
         Thread thread;
         MainWindow mainWindow;
+        int total = 0;//总数
+        int empty = 0;//空架
+        int shelves = 0;//在架
+        int wrang = 0;//错架
+        int cages = 0;//顺架
         /// <summary>
         /// 返回
         /// </summary>
         private ICommand backCommond { get; set; }
-        public ICommand BackCommond
+        public ICommand BackCommond 
         {
             get
             {
                 return backCommond ?? (backCommond = new DelegateCommand(() =>
                 {
-                    if(PublicData.ServerConfig.connState)
+                    if (PublicData.ServerConfig.connState && !PublicData.ServerConfig.wirelessRfid._shouldStop)
                         PublicData.ServerConfig.wirelessRfid.stop();
                     result = false;
                     HomeControl homeControl = new HomeControl(mainWindow);
@@ -146,17 +236,41 @@ namespace ArchivesCar.ViewModel
             {
                 return changeCommond ?? (changeCommond = new DelegateCommand(() =>
                 {
-                    if (!PublicData.ServerConfig.connState)
-                        PIC = "../image/停止.png";
-                    else if (PIC.Contains("扫描"))
+                    if (PublicData.ServerConfig.connState)
                     {
-                        PIC = "../image/停止.png";
-                        PublicData.ServerConfig.wirelessRfid.stop();
+                        if (PIC.Contains("扫描"))
+                        {
+                            PIC = "../image/停止.png";
+                            PublicData.ServerConfig.wirelessRfid.stop();
+                        }
+                        else
+                        {
+                            PIC = "../image/扫描.png";
+                            PublicData.ServerConfig.wirelessRfid.conset();
+                        }
                     }
                     else
                     {
-                        PIC = "../image/扫描.png";
-                        PublicData.ServerConfig.wirelessRfid.conset();
+                        PIC = "../image/停止.png";
+                        Task.Run(() => {
+                            EPC = "无线扫描设备断开连接,正在重新连接，请稍等...";
+                            Thread.Sleep(2000);
+                            EPC="";
+                        });
+                        Task.Run(() => {
+                            string msg = "";
+                            if (PublicData.ServerConfig.wirelessRfid.conn())
+                            {
+                                msg="无线设备连接成功，请重新点击";
+                            }
+                            else
+                            {
+                                msg="尝试连接无线设备失败";
+                            }
+                            EPC = msg;
+                            Thread.Sleep(2000);
+                            EPC = "";
+                        });
                     }
                 }));
             }
@@ -293,7 +407,7 @@ namespace ArchivesCar.ViewModel
                 string laysNum = USER.Substring(20, 4);
                 if (USER.Substring(24, 4) == "0000") { direction = "左"; }
                 else { direction = "右"; }
-                return  fkRegionNum.TrimStart('0') + "区" + colNum.TrimStart('0') + "列" + divNum.TrimStart('0') + "节" + laysNum.TrimStart('0') + "层" + direction.TrimStart('0') + "侧";
+                return fkRegionNum.TrimStart('0') + "区" + colNum.TrimStart('0') + "列" + divNum.TrimStart('0') + "节" + laysNum.TrimStart('0') + "层" + direction.TrimStart('0') + "侧";
             }
             else
             {

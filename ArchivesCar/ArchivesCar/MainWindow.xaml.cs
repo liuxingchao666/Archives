@@ -25,12 +25,19 @@ namespace ArchivesCar
         {
             InitializeComponent();
         }
-        [STAThread]
+      
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoginControl loginControl = new LoginControl(this);
             this.grid.Children.Add(loginControl);
            
-        } 
+        }
+
+        private void Window_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (PublicData.ServerConfig.connState)
+                PublicData.ServerConfig.wirelessRfid.close();
+            System.Environment.Exit(0);
+        }
     }
 }

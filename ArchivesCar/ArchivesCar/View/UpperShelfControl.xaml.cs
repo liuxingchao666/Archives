@@ -24,7 +24,7 @@ namespace ArchivesCar.View
         public UpperShelfControl(MainWindow mainWindow)
         {
             InitializeComponent();
-            DataContext = null;
+           // DataContext = null;
             DataContext = new UpperShelfViewModel(mainWindow);
         }
     }

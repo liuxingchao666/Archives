@@ -27,20 +27,23 @@ namespace ArchivesCar.DAL
                     returnInfo.TrueOrFalse = true;
                     List<InventoryInfo> infos = new List<InventoryInfo>();
                     int i = 1;
-                    foreach (var temp in result["row"].Children())
+                    if (!string.IsNullOrEmpty(result["rows"].ToString()))
                     {
-                        infos.Add(new InventoryInfo()
+                        foreach (var temp in result["rows"].Children())
                         {
-                            order = i,
-                            fkFileId = temp["fileId"].ToString(),
-                            fkFileName = temp["fileName"].ToString(),
-                            isBox = temp["arcOrBox"].ToString(),
-                            rfid = temp["rfid"].ToString(),
-                            barCode = temp["barCode"].ToString(),
-                            locationName = temp["locAddress"].ToString(),
-                            state = temp["state"].ToString()
-                        });
-                        i++;
+                            infos.Add(new InventoryInfo()
+                            {
+                                order = i,
+                                fkFileId = temp["fileId"].ToString(),
+                                fkFileName = temp["fileName"].ToString(),
+                                isBox = temp["arcOrBox"].ToString(),
+                                rfid = temp["rfid"].ToString(),
+                                barCode = temp["barCode"].ToString(),
+                                locationName = temp["locAddress"].ToString(),
+                                state = temp["state"].ToString()
+                            });
+                            i++;
+                        }
                     }
                     returnInfo.Result = infos;
                 }

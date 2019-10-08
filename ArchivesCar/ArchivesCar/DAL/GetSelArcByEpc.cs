@@ -34,7 +34,7 @@ namespace ArchivesCar.DAL
                     {
                         fkFileId = result["row"]["fileId"].ToString(),
                     fkFileName = result["row"]["fileName"].ToString(),
-                    isBox = result["row"]["arcOrBoz"].ToString(),
+                    isBox = result["row"]["arcOrBox"].ToString(),
                     rfid = result["row"]["rfid"].ToString(),
                     locationName = result["row"]["locAddress"].ToString(),
                     state = result["row"]["state"].ToString()

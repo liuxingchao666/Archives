@@ -19,29 +19,35 @@ namespace ArchivesCar.ViewModel
     {
         public BindViewModel(MainWindow mainWindow)
         {
+            PublicData.ServerConfig.EpcList = new Queue<string>();
             this.mainWindow = mainWindow;
             thread = new Thread(new ThreadStart(() =>
             {
                 while (result)
                 {
+                    if (!PublicData.ServerConfig.connState)
+                    {
+                        PublicData.ServerConfig.wirelessRfid.conn();
+                        PublicData.ServerConfig.wirelessRfid.conset();
+                    }
                     lock (PublicData.ServerConfig.EpcList)
                     {
                         if (PublicData.ServerConfig.EpcList.Count > 0)
                         {
                             EPC = PublicData.ServerConfig.EpcList.Dequeue();
-                            State = Visibility.Visible;
+                            Rfidstate = Visibility.Visible;
                             thread.Suspend();
                         }
                     }
-                    Thread.Sleep(60);
+                    Thread.Sleep(300);
                 }
                 thread.Abort();
                 thread = null;
             }));
             thread.IsBackground = true;
             thread.Start();
-            thread.Suspend();
             State = Visibility.Visible;
+            Rfidstate = Visibility.Hidden;
         }
         Thread thread;
         bool result = true;
@@ -57,6 +63,8 @@ namespace ArchivesCar.ViewModel
                 return backCommond ?? (backCommond = new DelegateCommand(() =>
                 {
                     result = false;
+                    if (PublicData.ServerConfig.connState && !PublicData.ServerConfig.wirelessRfid._shouldStop)
+                        PublicData.ServerConfig.wirelessRfid.stop();
                     HomeControl homeControl = new HomeControl(mainWindow);
                     mainWindow.grid.Children.Clear();
                     mainWindow.grid.Children.Add(homeControl);
@@ -86,30 +94,11 @@ namespace ArchivesCar.ViewModel
             {
                 return queryCommond ?? (queryCommond = new DelegateCommand(() =>
                 {
-                    if (string.IsNullOrEmpty(queryText))
+                    if (string.IsNullOrEmpty(QueryText))
                     {
                         return;
                     }
-                    object errorMsg = queryText;
-                    GetSelArcByFileNameDAL byFileNameDAL = new GetSelArcByFileNameDAL();
-                    if (byFileNameDAL.GetSelArcByFileName(ref errorMsg))
-                    {
-                        ReturnInfo returnInfo = errorMsg as ReturnInfo;
-                        if (returnInfo.TrueOrFalse)
-                        {
-                            List = returnInfo.Result as List<InventoryInfo>;
-                        }
-                        else
-                        {
-                            setMsg(returnInfo.Result.ToString());
-                            Color = "Red";
-                        }
-                    }
-                    else
-                    {
-                        setMsg(errorMsg.ToString());
-                        Color = "Red";
-                    }
+                    query(QueryText);
                 }));
             }
         }
@@ -135,7 +124,8 @@ namespace ArchivesCar.ViewModel
                     }
                     InventoryInfo info = data.SelectedItem as InventoryInfo;
                     Dictionary<string, object> valuePairs = new Dictionary<string, object>();
-                    valuePairs.Add("EPC",EPC);
+                    valuePairs.Add("rfid",EPC);
+                    valuePairs.Add("fileId", info.fkFileId);
                     object errorMsg = valuePairs;
                     BindRFIDDAL bindRFIDDAL = new BindRFIDDAL();
                     if (bindRFIDDAL.BindRFID(ref errorMsg))
@@ -151,6 +141,7 @@ namespace ArchivesCar.ViewModel
                                 }
                             }
                             setMsg("绑定成功");
+                           // query(QueryText);
                             EPC = "";
                         }
                         else
@@ -178,7 +169,7 @@ namespace ArchivesCar.ViewModel
                 return bindRfid ?? (bindRfid = new DelegateCommand(() =>
                 {
                     EPC = "";
-                    State = Visibility.Hidden;
+                    Rfidstate = Visibility.Hidden;
                     thread.Resume();
                 }));
             }
@@ -248,6 +239,19 @@ namespace ArchivesCar.ViewModel
                 this.RaisePropertyChanged(()=>State);
             }
         }
+        /// <summary>
+        /// 状态
+        /// </summary>
+        private Visibility rfidstate { get; set; }
+        public Visibility Rfidstate
+        {
+            get { return rfidstate; }
+            set
+            {
+                rfidstate = value;
+                this.RaisePropertyChanged(() => Rfidstate);
+            }
+        }
         void setMsg(string data)
         {
             Task.Run(()=> {
@@ -255,6 +259,29 @@ namespace ArchivesCar.ViewModel
                 Thread.Sleep(3000);
                 Msg = "";
             });
+        }
+        public void query(string queryText)
+        {
+            object errorMsg = queryText;
+            GetSelArcByFileNameDAL byFileNameDAL = new GetSelArcByFileNameDAL();
+            if (byFileNameDAL.GetSelArcByFileName(ref errorMsg))
+            {
+                ReturnInfo returnInfo = errorMsg as ReturnInfo;
+                if (returnInfo.TrueOrFalse)
+                {
+                    List = returnInfo.Result as List<InventoryInfo>;
+                }
+                else
+                {
+                    setMsg(returnInfo.Result.ToString());
+                    Color = "Red";
+                }
+            }
+            else
+            {
+                setMsg(errorMsg.ToString());
+                Color = "Red";
+            }
         }
     }
 }

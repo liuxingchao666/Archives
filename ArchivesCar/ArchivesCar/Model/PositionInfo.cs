@@ -13,8 +13,8 @@ namespace ArchivesCar.Model
         {
             if (USER.Substring(0, 8) == "AA0CFFA5")
             {
-                fkStoreId = ConfigurationManager.AppSettings["StoreId"];
-                fkStoreName = ConfigurationManager.AppSettings["StoreName"];
+                fkStoreId = ConfigurationManager.AppSettings["RoomId"];
+                fkStoreName = ConfigurationManager.AppSettings["RoomName"];
                 fkRegionNum = USER.Substring(8, 4).TrimStart('0');
                 colNum = USER.Substring(12, 4).TrimStart('0');
                 divNum = USER.Substring(16, 4).TrimStart('0');

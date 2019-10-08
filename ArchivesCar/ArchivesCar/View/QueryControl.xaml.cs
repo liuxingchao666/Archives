@@ -24,8 +24,10 @@ namespace ArchivesCar.View
         public QueryControl(MainWindow mainWindow)
         {
             InitializeComponent();
-            DataContext = null;
-            DataContext = new QueryViewModel(mainWindow);
+           // DataContext = null;
+            DataContext = new QueryViewModel(mainWindow,this);
+            PublicData.ServerConfig.EpcS = new List<string>();
+            PublicData.ServerConfig.UEpcS = new List<string>(); 
         }
     }
 }

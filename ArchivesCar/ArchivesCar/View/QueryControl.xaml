@@ -42,7 +42,7 @@
 
             </WrapPanel>
             <Label Width="200" HorizontalAlignment="Right" Content="{Binding Model}" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="30" Foreground="White" Padding="0,0,50,0"/>
-            <DataGrid ItemsSource="{Binding List}" Grid.Row="1" BorderThickness="0" GridLinesVisibility="None" Background="White" VerticalContentAlignment="Bottom" HorizontalContentAlignment="Center" ColumnHeaderHeight="60"  AutoGenerateColumns="False" CanUserAddRows ="False">
+            <DataGrid ItemsSource="{Binding List}" Name="grid" Grid.Row="1" BorderThickness="0"  Background="White"  ColumnHeaderHeight="60"  AutoGenerateColumns="False" CanUserAddRows ="False">
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="{x:Type DataGridColumnHeader}">
                         <Setter Property="HorizontalContentAlignment"  Value="Center"  />
@@ -55,11 +55,18 @@
                 <DataGrid.RowStyle>
                     <Style TargetType="{x:Type DataGridRow}">
                         <Setter Property="FontSize" Value="28"/>
+                        <Setter Property="BorderThickness" Value="0" />
                         <Setter Property="Foreground" Value="#666666"/>
                     </Style>
                 </DataGrid.RowStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="{x:Type DataGridRow}">
+
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Style>
+                </DataGrid.CellStyle>
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="*" Header="序号" ClipboardContentBinding="{x:Null}">
+                    <DataGridTemplateColumn Width="0.3*" Header="序号" ClipboardContentBinding="{x:Null}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Label Content="{Binding order}" FontSize="28" Foreground="#666666" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
@@ -69,7 +76,7 @@
                     <DataGridTemplateColumn Width="*" Header="题名" ClipboardContentBinding="{x:Null}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Label Content="{Binding fkFileName}" FontSize="28" Foreground="#666666" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                                <Label Content="678678674" FontSize="28" Foreground="#666666" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

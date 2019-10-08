@@ -38,13 +38,22 @@
                     </Button.Content>
                 </Button>
             </Border>
-            <WrapPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button Style="{StaticResource EmptyButtonStyle}" Width="432" Height="46" Command="{Binding ChangeCommond}">
-                    <Button.Content>
-                        <Image Source="{Binding PIC}" />
-                    </Button.Content>
-                </Button>
-                <Label Content="{Binding LocalTion}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="26" Foreground="White"/>
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <WrapPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Style="{StaticResource EmptyButtonStyle}" Width="432" Height="46" Command="{Binding ChangeCommond}">
+                        <Button.Content>
+                            <Image Source="{Binding PIC}" />
+                        </Button.Content>
+                    </Button>
+                    <Label Content="{Binding LocalTion}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="26" Foreground="White"/>
+                </WrapPanel>
+                <Border BorderBrush="#D4FAFF" BorderThickness="2" CornerRadius="24" HorizontalAlignment="Center" Width="180" Height="50" Background="White" Visibility="{Binding Rfidstate}">
+                    <Button Style="{StaticResource EmptyButtonStyle}" Command="{Binding GetRfidCommond}">
+                        <Button.Content>
+                            <Label Content="获取层架标签" Foreground="#19B8FB" FontSize="26" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Button.Content>
+                    </Button>
+                </Border>
             </WrapPanel>
             <DataGrid Grid.Row="1" Name="grid" ItemsSource="{Binding List}" BorderThickness="0" GridLinesVisibility="None" Background="White" VerticalContentAlignment="Bottom" HorizontalContentAlignment="Center" ColumnHeaderHeight="60"  AutoGenerateColumns="False" CanUserAddRows ="False">
                 <DataGrid.ColumnHeaderStyle>
@@ -85,7 +94,7 @@
                                         <Image Source="{Binding SelectOnePIC}" Width="30" Height="30" />
                                     </Button.Content>
                                 </Button>
-                               </DataTemplate>
+                            </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTemplateColumn Width="*" Header="序号" ClipboardContentBinding="{x:Null}">

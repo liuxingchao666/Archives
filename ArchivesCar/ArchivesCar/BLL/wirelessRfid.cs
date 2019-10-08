@@ -156,7 +156,7 @@ namespace ArchivesCar.BLL
             RfidBLL.RDR_LoadReaderDrivers(AppDomain.CurrentDomain.BaseDirectory + "/Drivers");
         }
         UIntPtr hreader = (UIntPtr)0x00;
-        bool _shouldStop = false;
+       public  bool _shouldStop = false;
         byte onlyNewTag = 1;
         Thread thread;
         public bool conn()
@@ -235,7 +235,10 @@ namespace ArchivesCar.BLL
             }
             nTagCount = 0;
         LABEL_TAG_INVENTORY:
-            iret = RfidBLL.RDR_TagInventory(hreader, AIType, AntennaSelCount, AntennaSel, InvenParamSpecList);
+            try
+            {
+                iret = RfidBLL.RDR_TagInventory(hreader, AIType, AntennaSelCount, AntennaSel, InvenParamSpecList);
+           
             if (iret == 0 || iret == -21)
             {
                 nTagCount += RfidBLL.RDR_GetTagDataReportCount(hreader);
@@ -263,14 +266,24 @@ namespace ArchivesCar.BLL
                         {
                             @string.Append(temp.ToString("X2"));
                         }
-                        if (!ServerConfig.EpcS.Contains(@string.ToString()))
-                            ServerConfig.EpcS.Add(@string.ToString());
+
                         if (@string.ToString().Contains("E200680A8AA8"))//层架判断
                             result = false;
-                        else
+                        else if (result && !ServerConfig.EpcList.Contains(@string.ToString()))
+                        {
+                            ServerConfig.EpcList.Enqueue(@string.ToString());
                             result = true;
+                        }
+                        else if (result && !ServerConfig.EpcS.Contains(@string.ToString()))
+                        {
+                            ServerConfig.EpcS.Add(@string.ToString());
+                            result = true;
+                        }
+                        else
+                        {
+                            result = true;
+                        }
                         ///user判断
-                        ServerConfig.EpcS.Add(@string.ToString());
                         byte[] user = new byte[28];
                         Array.Copy(tagData, 0, user, 0, 28);
                         @string = new StringBuilder();
@@ -283,13 +296,14 @@ namespace ArchivesCar.BLL
                             //可用user
                             if (!ServerConfig.UserList.Contains(@string.ToString()))
                                 ServerConfig.UserList.Enqueue(@string.ToString());
-                            ServerConfig.EpcS.Remove(@string.ToString());
                         }
+                        //else if(p==0x03)
+                        //{
+                        //    result = false;
+                        //    //保持最后一个epc为层架标签和最后一个user对应
+                        //}
                     }
-
-
                     TagDataReport = RfidBLL.RDR_GetTagDataReport(hreader, 2); //next
-
                 }
                 if (iret == -21) // stop trigger occur,need to inventory left tags
                 {
@@ -299,7 +313,12 @@ namespace ArchivesCar.BLL
                 iret = 0;
             }
             if (InvenParamSpecList.ToUInt64() != 0) RfidBLL.DNODE_Destroy(InvenParamSpecList);
-            return iret;
+                return iret;
+            }
+            catch {
+                return 0;
+            }
+           
         }
         public void DoInventory()
         {

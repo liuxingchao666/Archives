@@ -5,10 +5,12 @@ using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace ArchivesCar.ViewModel
@@ -19,10 +21,16 @@ namespace ArchivesCar.ViewModel
         {
             this.mainWindow = mainWindow;
             PIC = "../image/扫描.png";
+            PublicData.ServerConfig.userNow = "";
             thread = new Thread(new ThreadStart(() =>
             {
                 while (result)
                 {
+                    if (!PublicData.ServerConfig.connState)
+                    {
+                        PublicData.ServerConfig.wirelessRfid.conn();
+                        PublicData.ServerConfig.wirelessRfid.conset();
+                    }
                     lock (PublicData.ServerConfig.EpcS)
                     {
                         var list = (from c in PublicData.ServerConfig.EpcS
@@ -57,7 +65,24 @@ namespace ArchivesCar.ViewModel
                             }
                         }
                     }
+                    lock (PublicData.ServerConfig.UserList)
+                    {
+                        if (isWrite)
+                        {
+                            if (PublicData.ServerConfig.UserList.Count > 0)
+                            {
+                                string user = PublicData.ServerConfig.UserList.Dequeue();
+                                if (!PublicData.ServerConfig.userNow.Equals(user))
+                                {
+                                    LocalTion = GetPosition(user);
+                                    Rfidstate = Visibility.Visible;
+                                    isWrite = false;
+                                }
+                            }
+                        }
+                    }
                     Thread.Sleep(300);
+
                 }
                 thread.Abort();
                 thread = null;
@@ -65,11 +90,33 @@ namespace ArchivesCar.ViewModel
             {
                 IsBackground = true
             };
+            Rfidstate = Visibility.Hidden;
             thread.Start();
+
+        }
+        string GetPosition(string user)
+        {
+            string USER = user.Replace(" ", "");
+            if (USER.Substring(0, 8) == "AA0CFFA5")
+            {
+                string direction = "";
+                string fkRegionNum = USER.Substring(8, 4);
+                string colNum = USER.Substring(12, 4);
+                string divNum = USER.Substring(16, 4);
+                string laysNum = USER.Substring(20, 4);
+                if (USER.Substring(24, 4) == "0000") { direction = "左"; }
+                else { direction = "右"; }
+                return fkRegionNum.TrimStart('0') + "区" + colNum.TrimStart('0') + "列" + divNum.TrimStart('0') + "节" + laysNum.TrimStart('0') + "层" + direction.TrimStart('0') + "侧";
+            }
+            else
+            {
+                return null;
+            }
         }
         MainWindow mainWindow;
         Thread thread;
         bool result = true;
+        bool isWrite = true;
         /// <summary>
         /// 列表
         /// </summary>
@@ -94,6 +141,8 @@ namespace ArchivesCar.ViewModel
                 return backCommond ?? (backCommond = new DelegateCommand(() =>
                 {
                     result = false;
+                    if (PublicData.ServerConfig.connState && !PublicData.ServerConfig.wirelessRfid._shouldStop)
+                        PublicData.ServerConfig.wirelessRfid.stop();
                     HomeControl homeControl = new HomeControl(mainWindow);
                     mainWindow.grid.Children.Clear();
                     mainWindow.grid.Children.Add(homeControl);
@@ -138,13 +187,13 @@ namespace ArchivesCar.ViewModel
                         ReturnInfo info = errorMsg as ReturnInfo;
                         if (info.TrueOrFalse)
                         {
-                           ///
+                            ///
                         }
                         setError(info.Result.ToString());
                     }
                     else
                     {
-                        setError(errorMsg.ToString()); 
+                        setError(errorMsg.ToString());
                     }
                 }));
             }
@@ -185,7 +234,7 @@ namespace ArchivesCar.ViewModel
             set
             {
                 selectStatePIC = value;
-                this.RaisePropertyChanged(()=>SelectStatePIC);
+                this.RaisePropertyChanged(() => SelectStatePIC);
             }
         }
         /// <summary>
@@ -196,7 +245,8 @@ namespace ArchivesCar.ViewModel
         {
             get
             {
-                return selectAllCommond ?? (selectAllCommond = new DelegateCommand(() => {
+                return selectAllCommond ?? (selectAllCommond = new DelegateCommand(() =>
+                {
 
                 }));
             }
@@ -207,7 +257,8 @@ namespace ArchivesCar.ViewModel
         private ICommand selectOneCommond { get; set; }
         public ICommand SelectOneCommond
         {
-            get {
+            get
+            {
                 return selectOneCommond ?? (selectOneCommond = new DelegateCommand(() =>
                 {
 
@@ -224,17 +275,39 @@ namespace ArchivesCar.ViewModel
             set
             {
                 selectOnePIC = value;
-                this.RaisePropertyChanged(()=>SelectOnePIC);
+                this.RaisePropertyChanged(() => SelectOnePIC);
             }
         }
         void setError(string data)
         {
-            Task.Run(()=> {
+            Task.Run(() =>
+            {
                 LocalTion = data;
                 Thread.Sleep(3000);
                 LocalTion = "";
             });
         }
-        
+        private ICommand getRfidCommond { get; set; }
+        public ICommand GetRfidCommond
+        {
+            get
+            {
+                return getRfidCommond ?? (getRfidCommond = new DelegateCommand(() =>
+                {
+                    Rfidstate = Visibility.Hidden;
+                    isWrite = true;
+                }));
+            }
+        }
+        private Visibility rfidstate { get; set; }
+        public Visibility Rfidstate
+        {
+            get { return rfidstate; }
+            set
+            {
+                this.rfidstate = value;
+                this.RaisePropertyChanged(() => Rfidstate);
+            }
+        }
     }
 }

@@ -15,7 +15,8 @@ namespace ArchivesCar.ViewModel
 {
     public class QueryViewModel : NotificationObject
     {
-        public QueryViewModel(MainWindow window)
+    
+        public QueryViewModel(MainWindow window,QueryControl control)
         {
             this.mainWindow = window;
             PIC = "../image/扫描.png";
@@ -26,13 +27,18 @@ namespace ArchivesCar.ViewModel
             thread = new Thread(new ThreadStart(()=> {
                 while (result)
                 {
+                    if (!PublicData.ServerConfig.connState)
+                    {
+                        PublicData.ServerConfig.wirelessRfid.conn();
+                        PublicData.ServerConfig.wirelessRfid.conset();
+                    }
                     lock (PublicData.ServerConfig.EpcS)
                     {
                         ///获取2集合不重叠部分
                         var list = (from c in PublicData.ServerConfig.EpcS
                                    where!(from d in PublicData.ServerConfig.UEpcS select d).Contains(c)
                                    select c).ToList();
-                        int i = 0;
+                        int i = List.Count()+1;
                         GetSelArcByEpc getSel = new GetSelArcByEpc();
                         foreach (var temp in list)
                         {
@@ -45,7 +51,15 @@ namespace ArchivesCar.ViewModel
                                     InventoryInfo inventoryInfo = info.Result as InventoryInfo;
                                     inventoryInfo.order = i;
                                     i++;
-                                    List.Add(inventoryInfo);
+                                    List<InventoryInfo> inventoryInfos = List as List<InventoryInfo>;
+                                    inventoryInfos.Add(inventoryInfo);
+                                    List = new List<InventoryInfo>();
+                                    List = inventoryInfos;
+                                    control.Dispatcher.BeginInvoke((Action)delegate
+                                    {
+                                        control.grid.ItemsSource = null;
+                                        control.grid.ItemsSource = List;
+                                    });
                                     PublicData.ServerConfig.UEpcS.Add(temp);
                                 }
                                 else
@@ -62,7 +76,7 @@ namespace ArchivesCar.ViewModel
                         }
                         Total = "已扫描到标签数量:" + PublicData.ServerConfig.UEpcS.Count;
                     }
-                    Thread.Sleep(300);
+                    Thread.Sleep(1000);
                 }
                 thread.Abort();
                 thread = null;
@@ -85,6 +99,8 @@ namespace ArchivesCar.ViewModel
                 {
                     if (PIC.Contains("停止"))
                         thread.Resume();
+                    if (PublicData.ServerConfig.connState && !PublicData.ServerConfig.wirelessRfid._shouldStop)
+                        PublicData.ServerConfig.wirelessRfid.stop();
                     result = false;
                     HomeControl homeControl = new HomeControl(mainWindow);
                     mainWindow.grid.Children.Clear();
@@ -105,11 +121,15 @@ namespace ArchivesCar.ViewModel
                     if (PIC.Contains("扫描"))
                     {
                         thread.Suspend();
+                        if (PublicData.ServerConfig.connState)
+                            PublicData.ServerConfig.wirelessRfid.stop();
                         PIC = "../image/停止.png";
                     }
                     else
                     {
                         PIC = "../image/扫描.png";
+                        if (PublicData.ServerConfig.connState)
+                            PublicData.ServerConfig.wirelessRfid.conset();
                         thread.Resume();
                     }
                 }));

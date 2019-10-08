@@ -24,7 +24,7 @@ namespace ArchivesCar.View
         public HomeControl(MainWindow mainWindow)
         {
             InitializeComponent();
-            DataContext = null;
+           // DataContext = null;
             DataContext = new HomeViewModel(mainWindow);
         }
 

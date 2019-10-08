@@ -24,7 +24,7 @@ namespace ArchivesCar.View
         public BindControl(MainWindow mainWindow)
         {
             InitializeComponent();
-            DataContext = null;
+          //  DataContext = null;
             DataContext = new BindViewModel(mainWindow);
         }
     }
